@@ -18,10 +18,25 @@ app.get("/", async (req, res) => {
   return res.json({ message: "Hello, World" });
 });
 
+app.get("/user/:email", async (req, res) => {
+  const user = await userCollection.findOne( {"email": req.params.email} );
+  return res.status(201).json(user);
+});
+
 app.get("/friends/:genre", async (req, res) => {
   console.log("Getting friends for a user based on genre " + req.params.genre);
   const users = await userCollection.find( {"topGenre": req.params.genre} );
   const result = await users.toArray();
+  console.log(result);
+  return res.status(201).json(result);
+});
+
+app.get("/user/friend/:email", async (req,res) => {
+  const user = await userCollection.findOne( {"email": req.params.email} );
+
+  const friendUsers = await userCollection.find( {"email": {$in: user.friends}} );
+
+  const result = await friendUsers.toArray();
   console.log(result);
   return res.status(201).json(result);
 });
@@ -44,6 +59,14 @@ app.post("/newuser", async (req, res) => {
     }
     return res.status(201).json(updatedUser);
   });
+
+app.post("/user/friend", async(req, res) => {
+  console.log("Adding friend " + req.body.newFriend);
+  const updatedUser = await userCollection.findOneAndUpdate({"email": req.body.user}, {$push: {
+    "friends": req.body.newFriend
+  }});
+  return res.status(201).json(updatedUser);
+});
 
 const PORT = process.env.PORT || 8080;
 const start = async () => {
