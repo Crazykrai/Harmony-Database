@@ -41,6 +41,12 @@ app.get("/user/friend/:email", async (req,res) => {
   return res.status(201).json(result);
 });
 
+app.get("/user/recommendations/:email", async (req,res) => {
+  const user = await userCollection.findOne( {"email": req.params.email} );
+  console.log(user.recommendations);
+  return res.status(201).json(user.recommendations);
+});
+
 app.post("/newuser", async (req, res) => {
     console.log("Post for new user received");
     console.log(req.body);
@@ -64,6 +70,13 @@ app.post("/user/friend", async(req, res) => {
   console.log("Adding friend " + req.body.newFriend);
   const updatedUser = await userCollection.findOneAndUpdate({"email": req.body.user}, {$push: {
     "friends": req.body.newFriend
+  }});
+  return res.status(201).json(updatedUser);
+});
+
+app.post("/user/:email/recommendation", async(req,res) => {
+  const updatedUser = await userCollection.findOneAndUpdate({"email": req.params.email}, {$push: {
+    "recommendations": req.body
   }});
   return res.status(201).json(updatedUser);
 });
