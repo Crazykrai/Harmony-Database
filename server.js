@@ -41,6 +41,19 @@ app.get("/user/friend/:email", async (req,res) => {
   return res.status(201).json(result);
 });
 
+app.get("/user/posts/:email", async (req,res) => {
+  var posts = [];
+
+  const user = await userCollection.findOne( {"email": req.params.email} );
+  posts = posts.concat(user.posts);
+
+  const friendUsers = await userCollection.find( {"email": {$in: user.friends}} );
+
+  friendUsers.map(friend => posts = posts.concat(friend.posts));
+  console.log(posts);
+  return res.status(201).json(posts);
+});
+
 app.get("/user/recommendations/:email", async (req,res) => {
   const user = await userCollection.findOne( {"email": req.params.email} );
   console.log(user.recommendations);
@@ -77,6 +90,13 @@ app.post("/user/friend", async(req, res) => {
 app.post("/user/:email/recommendation", async(req,res) => {
   const updatedUser = await userCollection.findOneAndUpdate({"email": req.params.email}, {$push: {
     "recommendations": req.body
+  }});
+  return res.status(201).json(updatedUser);
+});
+
+app.post("/user/:email/post", async(req,res) => {
+  const updatedUser = await userCollection.findOneAndUpdate({"email": req.params.email}, {$push: {
+    "posts": req.body
   }});
   return res.status(201).json(updatedUser);
 });
