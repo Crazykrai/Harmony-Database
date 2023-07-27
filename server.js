@@ -11,11 +11,32 @@ var corsOptions = {
   
 app.use(cors());
 var userCollection = mongoose.connection.collection('Users');
+var messageCollection = mongoose.connection.collection('Messages');
 
 app.use(express.json());
 
 app.get("/", async (req, res) => {
   return res.json({ message: "Hello, World" });
+});
+
+app.get("/messages/:useremail/:friendemail", async (req,res) => {
+  const messagesFromUser = await messageCollection.find( {
+    "senderEmail": req.params.useremail,
+    "receiverEmail": req.params.friendemail
+ }).toArray();
+
+  const messagesFromFriend = await messageCollection.find( {
+    "senderEmail": req.params.friendemail,
+    "receiverEmail": req.params.useremail
+  }).toArray();
+
+  const result = messagesFromUser.concat(messagesFromFriend);
+  return res.status(201).json(result);
+});
+
+app.post("/messages/new", async (req,res) => {
+  const insertedMessage = await messageCollection.insertOne(req.body);
+  return res.status(201).json(insertedMessage);
 });
 
 app.get("/user/:email", async (req, res) => {
