@@ -27,7 +27,7 @@ app.get("/friends/:genre", async (req, res) => {
   console.log("Getting friends for a user based on genre " + req.params.genre);
   const users = await userCollection.find( {"topGenre": req.params.genre} );
   const result = await users.toArray();
-  console.log(result);
+  //console.log(result);
   return res.status(201).json(result);
 });
 
@@ -37,7 +37,7 @@ app.get("/user/friend/:email", async (req,res) => {
   const friendUsers = await userCollection.find( {"email": {$in: user.friends}} );
 
   const result = await friendUsers.toArray();
-  console.log(result);
+  //console.log(result);
   return res.status(201).json(result);
 });
 
@@ -47,9 +47,11 @@ app.get("/user/posts/:email", async (req,res) => {
   const user = await userCollection.findOne( {"email": req.params.email} );
   posts = posts.concat(user.posts);
 
-  const friendUsers = await userCollection.find( {"email": {$in: user.friends}} );
+  const friendUsers = await userCollection.find( {"email": {$in: user.friends}} ).toArray();
 
-  friendUsers.map(friend => posts = posts.concat(friend.posts));
+  friendUsers.forEach(friend => {
+    posts = posts.concat(friend.posts);
+  });
   console.log(posts);
   return res.status(201).json(posts);
 });
@@ -78,6 +80,14 @@ app.post("/newuser", async (req, res) => {
     }
     return res.status(201).json(updatedUser);
   });
+
+app.post("/user/:email/rec", async (req,res) => {
+  console.log('Updating recommendations', req.body);
+  const updatedUser = await userCollection.findOneAndUpdate({"email": req.params.email}, {$set: {
+    "recommendations": req.body
+  }});
+  return res.status(201).json(updatedUser);
+});
 
 app.post("/user/friend", async(req, res) => {
   console.log("Adding friend " + req.body.newFriend);
